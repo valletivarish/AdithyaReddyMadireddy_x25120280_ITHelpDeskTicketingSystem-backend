@@ -1,0 +1,41 @@
+# Java / Maven build output
+target/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+*.env
+application-local.properties
+
+# Logs
+*.log
+logs/
+
+# Terraform state files (contain sensitive data, should not be committed)
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfvars
+terraform/.terraform.lock.hcl
