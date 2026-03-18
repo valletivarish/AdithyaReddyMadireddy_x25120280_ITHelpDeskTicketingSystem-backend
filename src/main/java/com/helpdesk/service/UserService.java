@@ -7,6 +7,7 @@ import com.helpdesk.model.Role;
 import com.helpdesk.model.User;
 import com.helpdesk.config.JwtTokenProvider;
 import com.helpdesk.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,11 +33,11 @@ public class UserService implements UserDetailsService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
-    // Constructor injection for all dependencies
+    // @Lazy on AuthenticationManager breaks circular dependency: UserService -> SecurityConfig -> UserService
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider,
-                       AuthenticationManager authenticationManager) {
+                       @Lazy AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;

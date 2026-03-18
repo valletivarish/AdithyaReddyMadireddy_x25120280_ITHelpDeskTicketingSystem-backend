@@ -104,7 +104,8 @@ public class DashboardService {
         double totalHours = resolvedTickets.stream()
                 .mapToDouble(ticket -> {
                     Duration duration = Duration.between(ticket.getCreatedAt(), ticket.getResolvedAt());
-                    return duration.toMinutes() / 60.0;
+                    double hours = duration.toMinutes() / 60.0;
+                    return Math.max(hours, 0.0);
                 })
                 .sum();
 

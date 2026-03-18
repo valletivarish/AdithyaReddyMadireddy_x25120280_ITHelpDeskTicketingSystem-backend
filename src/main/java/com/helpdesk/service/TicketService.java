@@ -74,12 +74,11 @@ public class TicketService {
             ticket.setDepartment(department);
         }
 
-        // Assign agent if provided
+        // Assign agent if provided (status remains OPEN on creation)
         if (dto.getAgentId() != null) {
             Agent agent = agentRepository.findById(dto.getAgentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Agent", dto.getAgentId()));
             ticket.setAgent(agent);
-            ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
 
         Ticket saved = ticketRepository.save(ticket);

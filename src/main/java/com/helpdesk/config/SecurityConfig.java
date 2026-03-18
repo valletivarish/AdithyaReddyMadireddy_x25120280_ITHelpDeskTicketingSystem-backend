@@ -7,7 +7,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,13 +26,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    // Constructor injection for security dependencies
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserDetailsService userDetailsService) {
+    // @Lazy on UserDetailsService breaks circular dependency: SecurityConfig -> UserService -> SecurityConfig
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, @Lazy UserDetailsService userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
     }
@@ -61,6 +64,25 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Admin-only endpoints: user management, department CUD, agent CUD
+                .requestMatchers(HttpMethod.POST, "/api/departments/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/departments/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/departments/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/agents/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/agents/**").hasAnyRole("ADMIN", "AGENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/agents/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                // Read endpoints: accessible to all authenticated users
+                .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/agents/**").authenticated()
+                // Ticket operations: all authenticated users can create/view, admin/agent can update/delete
+                .requestMatchers(HttpMethod.POST, "/api/tickets/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/tickets/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasAnyRole("ADMIN", "AGENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
+                // Dashboard and reports
+                .requestMatchers("/api/dashboard/**").authenticated()
+                .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "AGENT")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

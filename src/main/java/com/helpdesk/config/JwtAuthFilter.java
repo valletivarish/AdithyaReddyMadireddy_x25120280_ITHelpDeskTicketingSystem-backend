@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -26,8 +27,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
 
-    // Constructor injection as required - no @Autowired field injection
-    public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
+    // @Lazy breaks the circular dependency: JwtAuthFilter -> UserService -> SecurityConfig -> JwtAuthFilter
+    public JwtAuthFilter(JwtTokenProvider jwtTokenProvider, @Lazy UserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
     }

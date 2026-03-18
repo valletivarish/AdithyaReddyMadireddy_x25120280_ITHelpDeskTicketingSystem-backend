@@ -2,6 +2,7 @@ package com.helpdesk.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -81,6 +82,20 @@ public class GlobalExceptionHandler {
         response.put("error", "Unauthorized");
         response.put("message", "Invalid email or password");
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * Handles access denied exceptions when a user lacks the required role.
+     * Returns 403 Forbidden with a user-friendly message.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("error", "Forbidden");
+        response.put("message", "You do not have permission to perform this action");
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     /**

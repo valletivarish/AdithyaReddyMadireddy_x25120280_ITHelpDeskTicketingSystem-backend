@@ -45,7 +45,16 @@ jobs:
       - name: Run static analysis and code coverage
         run: mvn verify -DskipTests -Dspring.profiles.active=test
 
-      # Step 6: Run Semgrep security vulnerability scanning
+      # Step 6: Run Snyk dependency vulnerability scan for Maven dependencies
+      - name: Run Snyk security scan
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
+        continue-on-error: true
+
+      # Step 7: Run Semgrep security vulnerability scanning
       # Semgrep scans for security issues, code smells, and potential vulnerabilities
       - name: Run Semgrep security scan
         uses: returntocorp/semgrep-action@v1
