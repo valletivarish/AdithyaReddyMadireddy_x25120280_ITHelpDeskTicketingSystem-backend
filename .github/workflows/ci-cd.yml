@@ -114,28 +114,24 @@ jobs:
           name: backend-jar
           path: ./target
 
-      # Step 2: Deploy the JAR to EC2 via SSH using appleboy action
-      # Copies the JAR file and restarts the application service
-      - name: Deploy to EC2 via SSH
+      # Step 2: Stop the application before deploying new JAR
+      - name: Stop application on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Stop the running application if exists
             sudo systemctl stop helpdesk-api || true
-            # Create application directory if not exists
             sudo mkdir -p /opt/helpdesk-api
-            # The JAR is uploaded via SCP in the next step
-            sudo systemctl start helpdesk-api
+            sudo chown ubuntu:ubuntu /opt/helpdesk-api
 
       # Step 3: Copy the JAR file to EC2 instance
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "target/*.jar"
           target: "/opt/helpdesk-api/"
@@ -146,11 +142,9 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo systemctl restart helpdesk-api
-            # Wait for application to start
             sleep 30
-            # Smoke test: verify the health endpoint responds with 200 OK
             curl -f http://localhost:8080/api/health || echo "Health check pending"

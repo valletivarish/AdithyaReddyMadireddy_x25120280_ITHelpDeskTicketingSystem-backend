@@ -1,9 +1,9 @@
 # Output values for the deployed infrastructure
 # These are displayed after terraform apply and can be used in CI/CD pipelines
 
-output "ec2_public_ip" {
-  description = "Public IP address of the backend EC2 instance"
-  value       = aws_instance.helpdesk_backend.public_ip
+output "ec2_elastic_ip" {
+  description = "Elastic IP address of the backend EC2 instance"
+  value       = aws_eip.helpdesk_eip.public_ip
 }
 
 output "ec2_public_dns" {
@@ -29,4 +29,14 @@ output "s3_website_url" {
 output "s3_bucket_name" {
   description = "Name of the S3 bucket for frontend deployment"
   value       = aws_s3_bucket.helpdesk_frontend.id
+}
+
+output "cloudfront_domain" {
+  description = "CloudFront distribution domain name for the frontend"
+  value       = aws_cloudfront_distribution.frontend_cdn.domain_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID"
+  value       = aws_cloudfront_distribution.frontend_cdn.id
 }

@@ -1,6 +1,7 @@
 # EC2 Instance Configuration for the Backend API Server
 # Provisions a t2.micro instance with Java 17, systemd service configuration,
 # and a security group allowing HTTP (8080) and SSH (22) access.
+# Includes an Elastic IP for a persistent public IP address.
 
 # Security group for the EC2 instance - controls inbound/outbound traffic
 resource "aws_security_group" "ec2_sg" {
@@ -52,11 +53,12 @@ resource "aws_instance" "helpdesk_backend" {
   user_data = <<-EOF
               #!/bin/bash
               # Update system packages
-              sudo yum update -y
-              # Install Java 17 (Amazon Corretto)
-              sudo yum install -y java-17-amazon-corretto-devel
+              sudo apt-get update -y
+              # Install Java 17
+              sudo apt-get install -y openjdk-17-jre-headless
               # Create application directory
               sudo mkdir -p /opt/helpdesk-api
+              sudo chown ubuntu:ubuntu /opt/helpdesk-api
               # Create systemd service file for the backend application
               cat <<'SERVICE' | sudo tee /etc/systemd/system/helpdesk-api.service
               [Unit]
@@ -65,7 +67,8 @@ resource "aws_instance" "helpdesk_backend" {
 
               [Service]
               Type=simple
-              User=ec2-user
+              User=ubuntu
+              WorkingDirectory=/opt/helpdesk-api
               ExecStart=/usr/bin/java -jar /opt/helpdesk-api/helpdesk-api-1.0.0.jar --spring.profiles.active=prod
               Restart=always
               RestartSec=10
@@ -81,4 +84,16 @@ resource "aws_instance" "helpdesk_backend" {
   tags = {
     Name = "helpdesk-backend-server"
   }
+}
+
+# Elastic IP for the EC2 instance - provides a static public IP address
+resource "aws_eip" "helpdesk_eip" {
+  instance = aws_instance.helpdesk_backend.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "helpdesk-backend-eip"
+  }
+
+  depends_on = [aws_internet_gateway.helpdesk_igw]
 }

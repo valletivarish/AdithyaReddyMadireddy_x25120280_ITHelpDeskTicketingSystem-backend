@@ -36,7 +36,7 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_db_instance" "helpdesk_db" {
   identifier             = "helpdesk-db"
   engine                 = "postgres"
-  engine_version         = "15.4"
+  engine_version         = "15.17"
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
   max_allocated_storage  = 50
