@@ -55,7 +55,9 @@ class TicketControllerTest {
     private JwtTokenProvider jwtTokenProvider;
 
     private String authToken;
+    private String adminToken;
     private User testUser;
+    private User adminUser;
 
     @BeforeEach
     void setUp() {
@@ -74,6 +76,16 @@ class TicketControllerTest {
                 .build();
         testUser = userRepository.save(testUser);
         authToken = "Bearer " + jwtTokenProvider.generateToken(testUser);
+
+        // Create an admin user for update/delete operations
+        adminUser = User.builder()
+                .fullName("Admin User")
+                .email("admin@example.com")
+                .password(passwordEncoder.encode("password123"))
+                .role(Role.ADMIN)
+                .build();
+        adminUser = userRepository.save(adminUser);
+        adminToken = "Bearer " + jwtTokenProvider.generateToken(adminUser);
     }
 
     /** Test creating a ticket with valid data returns 201 Created. */
@@ -196,7 +208,7 @@ class TicketControllerTest {
                 .build();
 
         mockMvc.perform(put("/api/tickets/" + ticket.getId())
-                        .header("Authorization", authToken)
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -218,7 +230,7 @@ class TicketControllerTest {
         ticket = ticketRepository.save(ticket);
 
         mockMvc.perform(delete("/api/tickets/" + ticket.getId())
-                        .header("Authorization", authToken))
+                        .header("Authorization", adminToken))
                 .andExpect(status().isNoContent());
     }
 

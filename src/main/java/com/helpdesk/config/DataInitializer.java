@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
  * Only runs if the database is empty (no users exist).
  */
 @Configuration
+@org.springframework.context.annotation.Profile("!test")
 public class DataInitializer {
 
     @Bean
