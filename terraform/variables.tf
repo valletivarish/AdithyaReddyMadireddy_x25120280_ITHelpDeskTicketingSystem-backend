@@ -41,5 +41,5 @@ variable "db_password" {
 variable "s3_bucket_name" {
   description = "S3 bucket name for hosting the frontend application"
   type        = string
-  default     = "helpdesk-frontend-x25120280"
+  default     = "helpdesk-frontend-app"
 }

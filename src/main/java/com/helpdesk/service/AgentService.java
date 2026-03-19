@@ -6,6 +6,7 @@ import com.helpdesk.exception.BadRequestException;
 import com.helpdesk.exception.ResourceNotFoundException;
 import com.helpdesk.model.Agent;
 import com.helpdesk.model.Department;
+import com.helpdesk.model.Role;
 import com.helpdesk.model.User;
 import com.helpdesk.repository.AgentRepository;
 import com.helpdesk.repository.DepartmentRepository;
@@ -58,6 +59,9 @@ public class AgentService {
                 .available(dto.isAvailable())
                 .phone(dto.getPhone())
                 .build();
+
+        user.setRole(Role.AGENT);
+        userRepository.save(user);
 
         Agent saved = agentRepository.save(agent);
         return mapToResponseDTO(saved);
@@ -116,12 +120,14 @@ public class AgentService {
         return mapToResponseDTO(updated);
     }
 
-    /** Deletes an agent profile by ID. */
+    /** Deletes an agent profile by ID and reverts user role to USER. */
     @Transactional
     public void deleteAgent(Long id) {
-        if (!agentRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Agent", id);
-        }
+        Agent agent = agentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent", id));
+        User user = agent.getUser();
+        user.setRole(Role.USER);
+        userRepository.save(user);
         agentRepository.deleteById(id);
     }
 

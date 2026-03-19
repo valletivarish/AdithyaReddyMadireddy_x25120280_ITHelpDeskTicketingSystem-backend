@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,25 +90,21 @@ public class DashboardService {
     }
 
     /**
-     * Calculates the average resolution time in hours for tickets resolved in the last 90 days.
+     * Calculates the average resolution time in hours for all resolved tickets.
      * Resolution time is the duration between ticket creation and resolution.
      */
     private double calculateAverageResolutionTime() {
-        LocalDateTime since = LocalDateTime.now().minusDays(90);
-        List<Ticket> resolvedTickets = ticketRepository.findResolvedTicketsSince(since);
+        List<Ticket> allTickets = ticketRepository.findAll();
 
-        if (resolvedTickets.isEmpty()) {
-            return 0.0;
-        }
-
-        double totalHours = resolvedTickets.stream()
+        double avgHours = allTickets.stream()
+                .filter(ticket -> ticket.getResolvedAt() != null && ticket.getCreatedAt() != null)
                 .mapToDouble(ticket -> {
-                    Duration duration = Duration.between(ticket.getCreatedAt(), ticket.getResolvedAt());
-                    double hours = duration.toMinutes() / 60.0;
+                    double hours = Duration.between(ticket.getCreatedAt(), ticket.getResolvedAt()).toMinutes() / 60.0;
                     return Math.max(hours, 0.0);
                 })
-                .sum();
+                .average()
+                .orElse(0.0);
 
-        return Math.round((totalHours / resolvedTickets.size()) * 100.0) / 100.0;
+        return Math.round(avgHours * 100.0) / 100.0;
     }
 }
