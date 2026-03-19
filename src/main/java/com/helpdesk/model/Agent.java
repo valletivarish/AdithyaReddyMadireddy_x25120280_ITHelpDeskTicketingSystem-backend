@@ -46,6 +46,11 @@ public class Agent {
     /** Phone number for direct contact with the agent */
     private String phone;
 
+    /** Soft delete flag - inactive agents are hidden from listings */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
     /** Timestamp when the agent profile was created */
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

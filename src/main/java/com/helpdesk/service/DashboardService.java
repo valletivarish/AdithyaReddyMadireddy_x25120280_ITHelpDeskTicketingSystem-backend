@@ -80,7 +80,7 @@ public class DashboardService {
                 .resolvedTickets(resolvedTickets)
                 .closedTickets(closedTickets)
                 .totalAgents(agentRepository.count())
-                .availableAgents(agentRepository.countByAvailableTrue())
+                .availableAgents(agentRepository.countByAvailableTrueAndActiveTrue())
                 .totalDepartments(departmentRepository.count())
                 .ticketsByPriority(ticketsByPriority)
                 .ticketsByCategory(ticketsByCategory)

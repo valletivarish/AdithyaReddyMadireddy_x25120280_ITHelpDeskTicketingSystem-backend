@@ -43,7 +43,7 @@ public class AgentService {
      */
     @Transactional
     public AgentResponseDTO createAgent(AgentDTO dto) {
-        if (agentRepository.existsByUserId(dto.getUserId())) {
+        if (agentRepository.existsByUserIdAndActiveTrue(dto.getUserId())) {
             throw new BadRequestException("User already has an agent profile");
         }
 
@@ -67,10 +67,10 @@ public class AgentService {
         return mapToResponseDTO(saved);
     }
 
-    /** Retrieves all agents in the system. */
+    /** Retrieves all active agents in the system. */
     @Transactional(readOnly = true)
     public List<AgentResponseDTO> getAllAgents() {
-        return agentRepository.findAll().stream()
+        return agentRepository.findByActiveTrue().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -83,18 +83,18 @@ public class AgentService {
         return mapToResponseDTO(agent);
     }
 
-    /** Retrieves agents by department for filtering. */
+    /** Retrieves active agents by department for filtering. */
     @Transactional(readOnly = true)
     public List<AgentResponseDTO> getAgentsByDepartment(Long departmentId) {
-        return agentRepository.findByDepartmentId(departmentId).stream()
+        return agentRepository.findByDepartmentIdAndActiveTrue(departmentId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    /** Retrieves all currently available agents. */
+    /** Retrieves all currently available active agents. */
     @Transactional(readOnly = true)
     public List<AgentResponseDTO> getAvailableAgents() {
-        return agentRepository.findByAvailableTrue().stream()
+        return agentRepository.findByAvailableTrueAndActiveTrue().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -120,15 +120,18 @@ public class AgentService {
         return mapToResponseDTO(updated);
     }
 
-    /** Deletes an agent profile by ID and reverts user role to USER. */
+    /** Soft deletes an agent profile by setting active to false and reverting user role to USER. */
     @Transactional
     public void deleteAgent(Long id) {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent", id));
+        agent.setActive(false);
+        agent.setAvailable(false);
+        agentRepository.save(agent);
+
         User user = agent.getUser();
         user.setRole(Role.USER);
         userRepository.save(user);
-        agentRepository.deleteById(id);
     }
 
     /** Maps Agent entity to AgentResponseDTO including user and department details. */

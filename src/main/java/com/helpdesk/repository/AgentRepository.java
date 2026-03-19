@@ -27,4 +27,19 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
 
     /** Check if a user already has an agent profile */
     boolean existsByUserId(Long userId);
+
+    /** Find all active agents */
+    List<Agent> findByActiveTrue();
+
+    /** Find active agents by department */
+    List<Agent> findByDepartmentIdAndActiveTrue(Long departmentId);
+
+    /** Find active available agents */
+    List<Agent> findByAvailableTrueAndActiveTrue();
+
+    /** Count active available agents */
+    long countByAvailableTrueAndActiveTrue();
+
+    /** Check if user already has an active agent profile */
+    boolean existsByUserIdAndActiveTrue(Long userId);
 }
