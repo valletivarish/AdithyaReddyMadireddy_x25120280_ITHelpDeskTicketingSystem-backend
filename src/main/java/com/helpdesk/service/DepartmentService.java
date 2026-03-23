@@ -4,8 +4,12 @@ import com.helpdesk.dto.DepartmentDTO;
 import com.helpdesk.dto.DepartmentResponseDTO;
 import com.helpdesk.exception.BadRequestException;
 import com.helpdesk.exception.ResourceNotFoundException;
+import com.helpdesk.model.Agent;
 import com.helpdesk.model.Department;
+import com.helpdesk.model.Ticket;
+import com.helpdesk.repository.AgentRepository;
 import com.helpdesk.repository.DepartmentRepository;
+import com.helpdesk.repository.TicketRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +25,16 @@ import java.util.stream.Collectors;
 public class DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final TicketRepository ticketRepository;
+    private final AgentRepository agentRepository;
 
     // Constructor injection
-    public DepartmentService(DepartmentRepository departmentRepository) {
+    public DepartmentService(DepartmentRepository departmentRepository,
+                             TicketRepository ticketRepository,
+                             AgentRepository agentRepository) {
         this.departmentRepository = departmentRepository;
+        this.ticketRepository = ticketRepository;
+        this.agentRepository = agentRepository;
     }
 
     /**
@@ -90,12 +100,21 @@ public class DepartmentService {
 
     /**
      * Deletes a department by ID.
+     * Unlinks any tickets referencing this department before deletion.
      */
     @Transactional
     public void deleteDepartment(Long id) {
         if (!departmentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Department", id);
         }
+        List<Ticket> tickets = ticketRepository.findByDepartmentId(id);
+        for (Ticket ticket : tickets) {
+            ticket.setDepartment(null);
+            ticket.setAgent(null);
+            ticketRepository.save(ticket);
+        }
+        List<Agent> agents = agentRepository.findByDepartmentId(id);
+        agentRepository.deleteAll(agents);
         departmentRepository.deleteById(id);
     }
 
