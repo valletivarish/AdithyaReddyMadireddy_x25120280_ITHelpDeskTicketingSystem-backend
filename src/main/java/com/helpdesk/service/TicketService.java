@@ -6,6 +6,7 @@ import com.helpdesk.exception.BadRequestException;
 import com.helpdesk.exception.ResourceNotFoundException;
 import com.helpdesk.model.*;
 import com.helpdesk.repository.AgentRepository;
+import com.helpdesk.repository.CommentRepository;
 import com.helpdesk.repository.DepartmentRepository;
 import com.helpdesk.repository.TicketRepository;
 import com.helpdesk.repository.UserRepository;
@@ -28,15 +29,18 @@ public class TicketService {
     private final UserRepository userRepository;
     private final AgentRepository agentRepository;
     private final DepartmentRepository departmentRepository;
+    private final CommentRepository commentRepository;
 
     public TicketService(TicketRepository ticketRepository,
                          UserRepository userRepository,
                          AgentRepository agentRepository,
-                         DepartmentRepository departmentRepository) {
+                         DepartmentRepository departmentRepository,
+                         CommentRepository commentRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.agentRepository = agentRepository;
         this.departmentRepository = departmentRepository;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -217,12 +221,13 @@ public class TicketService {
         return mapToResponseDTO(updated);
     }
 
-    /** Deletes a ticket by ID. */
+    /** Deletes a ticket by ID, removing associated comments first. */
     @Transactional
     public void deleteTicket(Long id) {
         if (!ticketRepository.existsById(id)) {
             throw new ResourceNotFoundException("Ticket", id);
         }
+        commentRepository.deleteAll(commentRepository.findByTicketIdOrderByCreatedAtAsc(id));
         ticketRepository.deleteById(id);
     }
 
